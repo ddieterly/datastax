@@ -1,5 +1,7 @@
 package com.dieterly.datastax;
 
+import com.codahale.metrics.health.HealthCheck;
+import com.dieterly.datastax.health.TechExamHealthCheck;
 import com.dieterly.datastax.resources.AssetResource;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -16,6 +18,7 @@ public class TechExamApplication extends Application<TechExamConfiguration>
     private Logger logger = LoggerFactory.getLogger(TechExamApplication.class);
 
     private final AssetResource assetResource;
+    private final HealthCheck techExamHealthCheck;
 
     public static void main(final String[] args) throws Exception
     {
@@ -28,9 +31,11 @@ public class TechExamApplication extends Application<TechExamConfiguration>
     }
 
     @Inject
-    private TechExamApplication(final AssetResource assetResource)
+    private TechExamApplication(final AssetResource assetResource,
+                                final TechExamHealthCheck techExamHealthCheck)
     {
         this.assetResource = assetResource;
+        this.techExamHealthCheck = techExamHealthCheck;
     }
 
     @Override
@@ -51,6 +56,7 @@ public class TechExamApplication extends Application<TechExamConfiguration>
     {
 
         environment.jersey().register(assetResource);
+        environment.healthChecks().register("TechExamHealth", techExamHealthCheck);
 
     }
 
