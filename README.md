@@ -16,6 +16,13 @@ This file should contain lines in the following format:
 
 Substitute your own AWS credentials values for the values your_access_key_id and your_secret_access_key.`
 
+Edit the bucket and region values in TechExamModule.java
+
+    private final String bucket = "your bucket";
+    private final String region = "your region"; 
+
+Substitute your own AWS values for bucket and region.
+
 How to start the TechExam application
 ---
 
