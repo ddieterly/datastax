@@ -9,8 +9,8 @@ public class TechExamModule extends AbstractModule
 {
     private Logger logger = LoggerFactory.getLogger(TechExamModule.class);
 
-    private final String bucket = "dmc-asset-uploader-test";
-    private final String region = "us-west-2";
+    private final String bucket = "ddieterly-bucket-0";
+    private final String region = "us-west-1";
 
     @Override
     protected void configure()

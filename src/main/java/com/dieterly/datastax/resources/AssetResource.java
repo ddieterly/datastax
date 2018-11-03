@@ -22,14 +22,13 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Path("/asset")
@@ -45,7 +44,9 @@ public class AssetResource
     private final String hostId;
     private final String pid;
 
-    private final Map<String, Boolean> assetStatus = new ConcurrentHashMap<>();
+    private final String METADATA_ID_PREFIX = "metadata-id-prefix";
+    private final String CREATED_STATUS = "created";
+    private final String UPLOADED_STATUS = "uploaded";
 
     private final Long DEFAULT_TIMEOUT_SECONDS = new Long(60 * 60); // 1 hour
 
@@ -67,33 +68,44 @@ public class AssetResource
     public UploadAssetResponse uploadAsset()
     {
         String assetId = createAssetId();
-        String url = awsClient.getPresignedUrl(HttpMethod.PUT, assetId, DEFAULT_TIMEOUT_SECONDS);
-        assetStatus.put(assetId, false);
+        String url = awsClient.createPresignedUrl(HttpMethod.PUT, assetId, DEFAULT_TIMEOUT_SECONDS);
+
+        awsClient.putObject(createAssetMetadatatId(assetId), CREATED_STATUS);
+
         return new UploadAssetResponse(url, assetId);
     }
 
     @PUT
     @Path("{assetId}")
     @Timed
-    public MarkUploadAssetCompleteResponse markUploadAssetComplete(@PathParam("assetId") String assetId)
+    public MarkUploadAssetCompleteResponse markUploadAssetComplete(@PathParam("assetId") String assetId) throws IOException
     {
-        assetStatus.put(assetId, true);
-        return new MarkUploadAssetCompleteResponse("uploaded");
+        String assetStatus = awsClient.getObject(createAssetMetadatatId(assetId));
+        if (!assetStatus.equals(CREATED_STATUS))
+        {
+            final String msg = String.format("Asset '%s' does not exist or has not been marked as 'created'", assetId);
+            throw new WebApplicationException(msg, Response.Status.NOT_FOUND);
+        }
+
+        awsClient.putObject(createAssetMetadatatId(assetId), UPLOADED_STATUS);
+
+        return new MarkUploadAssetCompleteResponse(UPLOADED_STATUS);
     }
 
     @GET
     @Path("{assetId}")
     @Timed
     public GetAssetResponse getAsset(@PathParam("assetId") String assetId,
-                                     @QueryParam("timeout") Optional<Long> timeout)
+                                     @QueryParam("timeout") Optional<Long> timeout) throws IOException
     {
-        if (assetStatus.get(assetId) == null || !assetStatus.get(assetId))
+        String assetStatus = awsClient.getObject(createAssetMetadatatId(assetId));
+        if (!assetStatus.equals(UPLOADED_STATUS))
         {
-            final String msg = String.format("Asset %s does not exist or has not been marked as 'uploaded'", assetId);
+            final String msg = String.format("Asset '%s' does not exist or has not been marked as 'uploaded'", assetId);
             throw new WebApplicationException(msg, Response.Status.NOT_FOUND);
         }
 
-        String url = awsClient.getPresignedUrl(HttpMethod.GET,
+        String url = awsClient.createPresignedUrl(HttpMethod.GET,
                 assetId,
                 timeout.orElse(DEFAULT_TIMEOUT_SECONDS));
         return new GetAssetResponse(url);
@@ -106,11 +118,23 @@ public class AssetResource
      */
     private String createAssetId()
     {
-        String sb = hostId +
+        String id = hostId +
                 pid +
                 System.currentTimeMillis() +
                 String.valueOf(objectCounter.incrementAndGet());
-        return Hashing.sha256().hashString(sb, Charsets.UTF_8).toString();
+        return Hashing.sha256().hashString(id, Charsets.UTF_8).toString();
+    }
+
+    /**
+     * Create unique object id to store meta data about asset ids.
+     *
+     * @param assetId
+     * @return assetMetadataId
+     */
+    private String createAssetMetadatatId(String assetId)
+    {
+        String metaId = METADATA_ID_PREFIX + assetId;
+        return Hashing.sha256().hashString(metaId, Charsets.UTF_8).toString();
     }
 
     /**
