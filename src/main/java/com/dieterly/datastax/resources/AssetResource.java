@@ -58,7 +58,7 @@ public class AssetResource
         this.pid = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
         logger.info("Using pid {}: ", pid);
 
-        hostId = createHostId();
+        this.hostId = createHostId();
         logger.info("Using host id {}: ", hostId);
 
     }
