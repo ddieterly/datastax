@@ -40,7 +40,7 @@ Asset uploader service Provided by TechExam server
 ---
 The TechExam server provides an S3 asset uploader API as described below:
 
-#####1. The service has an http POST endpoint to upload a new asset.
+##### 1. The service has an http POST endpoint to upload a new asset.
 
     POST /asset
 
@@ -52,9 +52,9 @@ The TechExam server provides an S3 asset uploader API as described below:
         “id”: <asset-id>
     }
 
-#####2. The user is able to make a POST call to the s3 signed url to upload the asset.
+##### 2. The user is able to make a POST call to the s3 signed url to upload the asset.
 
-#####3. To mark the upload operation as complete, the service provides a PUT endpoint as follows:
+##### 3. To mark the upload operation as complete, the service provides a PUT endpoint as follows:
 
     PUT /asset/<asset-id>
 
@@ -63,7 +63,7 @@ The TechExam server provides an S3 asset uploader API as described below:
         “Status”: “uploaded”
     }
 
-#####4. When a Get request is made on the asset, the service returns a s3 signed url for download with the timeout in seconds as a url parameter. If the timeout is not specified assume 60 seconds.
+##### 4. When a Get request is made on the asset, the service returns a s3 signed url for download with the timeout in seconds as a url parameter. If the timeout is not specified assume 60 seconds.
 
     GET /asset/<asset-id>?timeout=100
 
@@ -75,4 +75,4 @@ The TechExam server provides an S3 asset uploader API as described below:
 A get call made on an asset which has not been set to “status: uploaded” returns
 an error.
 
-#####5. The uploaded asset should be fetched successfully using the returned signed url.
+##### 5. The uploaded asset should be fetched successfully using the returned signed url.
