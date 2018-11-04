@@ -2,10 +2,14 @@ package com.dieterly.datastax.api;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 
 public class GetAssetResponseTest
 {
+    @InjectMocks
+    GetAssetResponse getAssetResponse;
+
     @Before
     public void setUp()
     {
@@ -13,20 +17,15 @@ public class GetAssetResponseTest
     }
 
     @Test
-    public void UploadAssetTest()
+    public void GetAssetResponseTest()
     {
 
     }
 
     @Test
-    public void markUploadAssetCompleteTest()
+    public void getDownload_urlTest()
     {
 
     }
 
-    @Test
-    public void getAssetTest()
-    {
-
-    }
 }

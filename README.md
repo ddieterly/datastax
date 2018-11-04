@@ -63,7 +63,7 @@ The TechExam server provides an S3 asset uploader API as described below:
         “Status”: “uploaded”
     }
 
-##### 4. When a Get request is made on the asset, the service returns a s3 signed url for download with the timeout in seconds as a url parameter. If the timeout is not specified assume 60 seconds.
+##### 4. When a Get request is made on the asset, the service returns an s3 signed url for download with the timeout in seconds as a url parameter. If the timeout is not specified assume 60 seconds.
 
     GET /asset/<asset-id>?timeout=100
 

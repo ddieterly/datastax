@@ -32,6 +32,8 @@ public class AwsClient
         this.region = region;
     }
 
+    // TODO: Refactor s3Client out so that it can be injected.
+
     public String createPresignedUrl(final HttpMethod httpMethod,
                                      final String objectKey,
                                      long timeOutSecs)

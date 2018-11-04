@@ -148,6 +148,7 @@ public class AssetResource
      *
      * @return objectId
      */
+    // TODO: Refactor out into assetIdFactory so that it can be injected.
     private String createAssetId()
     {
         String id = hostId +
@@ -163,6 +164,7 @@ public class AssetResource
      * @param assetId
      * @return assetMetadataId
      */
+    // TODO: Refactor out into assetMetadataIdFactory so that it can be injected.
     private String createAssetMetadatatId(String assetId)
     {
         String metaId = METADATA_ID_PREFIX + assetId;
@@ -175,6 +177,7 @@ public class AssetResource
      * @return hostId
      * @throws SocketException
      */
+    // TODO: Refactor out into hostIdFactory so that it can be injected.
     private String createHostId() throws SocketException
     {
         final StringBuilder sb = new StringBuilder();

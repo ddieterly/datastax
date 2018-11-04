@@ -1,14 +1,14 @@
-package com.dieterly.datastax.api;
+package com.dieterly.datastax.aws;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 
-public class UploadAssetResponseTest
+public class AwsClientTest
 {
     @InjectMocks
-    UploadAssetResponse uploadAssetResponse;
+    AwsClient awsClient;
 
     @Before
     public void setUp()
@@ -17,19 +17,19 @@ public class UploadAssetResponseTest
     }
 
     @Test
-    public void UploadAssetResponseTest()
+    public void createPresignedUrlTest()
     {
 
     }
 
     @Test
-    public void getUpload_urlTest()
+    public void putObjectTest()
     {
 
     }
 
     @Test
-    public void getIdTest()
+    public void getObjectTest()
     {
 
     }
