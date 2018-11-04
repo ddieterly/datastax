@@ -1,6 +1,7 @@
 package com.dieterly.datastax.resources;
 
 import com.amazonaws.HttpMethod;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.codahale.metrics.annotation.Timed;
 import com.dieterly.datastax.api.GetAssetResponse;
 import com.dieterly.datastax.api.MarkUploadAssetCompleteResponse;
@@ -44,11 +45,14 @@ public class AssetResource
     private final String hostId;
     private final String pid;
 
-    private final String METADATA_ID_PREFIX = "metadata-id-prefix";
+    private final String METADATA_ID_PREFIX = "metadata-id-prefix-";
+
     private final String CREATED_STATUS = "created";
     private final String UPLOADED_STATUS = "uploaded";
+    private static final String NO_SUCH_KEY = "NoSuchKey";
 
     private final Long DEFAULT_TIMEOUT_SECONDS = new Long(60 * 60); // 1 hour
+    private final Long DEFAULT_GET_TIMEOUT_SECONDS = new Long(60); // 1 minute
 
     @Inject
     public AssetResource(AwsClient awsClient) throws SocketException
@@ -80,13 +84,27 @@ public class AssetResource
     @Timed
     public MarkUploadAssetCompleteResponse markUploadAssetComplete(@PathParam("assetId") String assetId) throws IOException
     {
-        String assetStatus = awsClient.getObject(createAssetMetadatatId(assetId));
-        if (!assetStatus.equals(CREATED_STATUS))
+        try
         {
-            final String msg = String.format("Asset '%s' does not exist or has not been marked as 'created'", assetId);
-            throw new WebApplicationException(msg, Response.Status.NOT_FOUND);
+            String assetStatus = awsClient.getObject(createAssetMetadatatId(assetId));
+            if (!assetStatus.equals(CREATED_STATUS))
+            {
+                final String msg = String.format("Asset '%s' has already been marked as 'uploaded'", assetId);
+                throw new WebApplicationException(msg, Response.Status.BAD_REQUEST);
+            }
         }
-
+        catch (AmazonS3Exception e)
+        {
+            if (e.getErrorCode().equals(NO_SUCH_KEY))
+            {
+                final String msg = String.format("Asset '%s' does not exist", assetId);
+                throw new WebApplicationException(msg, Response.Status.NOT_FOUND);
+            }
+            else
+            {
+                throw new WebApplicationException("Encountered failure processing request", e, Response.Status.INTERNAL_SERVER_ERROR);
+            }
+        }
         awsClient.putObject(createAssetMetadatatId(assetId), UPLOADED_STATUS);
 
         return new MarkUploadAssetCompleteResponse(UPLOADED_STATUS);
@@ -98,16 +116,30 @@ public class AssetResource
     public GetAssetResponse getAsset(@PathParam("assetId") String assetId,
                                      @QueryParam("timeout") Optional<Long> timeout) throws IOException
     {
-        String assetStatus = awsClient.getObject(createAssetMetadatatId(assetId));
-        if (!assetStatus.equals(UPLOADED_STATUS))
+        try
         {
-            final String msg = String.format("Asset '%s' does not exist or has not been marked as 'uploaded'", assetId);
-            throw new WebApplicationException(msg, Response.Status.NOT_FOUND);
+            String assetStatus = awsClient.getObject(createAssetMetadatatId(assetId));
+            if (!assetStatus.equals(UPLOADED_STATUS))
+            {
+                final String msg = String.format("Asset '%s' has not been marked as 'uploaded'", assetId);
+                throw new WebApplicationException(msg, Response.Status.BAD_REQUEST);
+            }
         }
-
+        catch (AmazonS3Exception e)
+        {
+            if (e.getErrorCode().equals(NO_SUCH_KEY))
+            {
+                final String msg = String.format("Asset '%s' does not exist", assetId);
+                throw new WebApplicationException(msg, Response.Status.NOT_FOUND);
+            }
+            else
+            {
+                throw new WebApplicationException("Encountered failure processing request", e, Response.Status.INTERNAL_SERVER_ERROR);
+            }
+        }
         String url = awsClient.createPresignedUrl(HttpMethod.GET,
                 assetId,
-                timeout.orElse(DEFAULT_TIMEOUT_SECONDS));
+                timeout.orElse(DEFAULT_GET_TIMEOUT_SECONDS));
         return new GetAssetResponse(url);
     }
 
