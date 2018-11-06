@@ -35,6 +35,8 @@ Health Check for TechExam server
 
 To see your applications health enter url `http://localhost:8081/healthcheck`
 
+To see your applications admin console enter  url `http://localhost:8081`
+
 
 Asset uploader service Provided by TechExam server
 ---
